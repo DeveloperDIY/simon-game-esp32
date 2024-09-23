@@ -114,6 +114,7 @@ void startingGameCountdownScreen() {
   int size = sizeof(pirates_durations) / sizeof(int);
 
   for (int note = 0; note < size; note++) {
+    runningTime = millis();
     //to calculate the note duration, take one second divided by the note type.
     //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
     int duration = 1000 / pirates_durations[note];
