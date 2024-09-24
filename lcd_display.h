@@ -89,7 +89,7 @@ void startGameScreen() {
 
   // Setup screen
   tft.setTextDatum(MC_DATUM); // Center text
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
 
   // START GAME
   tft.loadFont(FONT_GILROY_HEAVY_64);
@@ -102,19 +102,27 @@ void startGameScreen() {
 }
 
 void startingGameCountdownScreen() {
+  
+  // Setup
   clearScreen();
-
   tft.setTextDatum(MC_DATUM); // Center text
   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-
   tft.loadFont(FONT_GILROY_HEAVY_96);
-  tft.drawString("5", 120, 170);
-  tft.unloadFont();
 
   int size = sizeof(pirates_durations) / sizeof(int);
+  byte countdown = 3;
+  unsigned long timeLastNumberChanged = 0;
 
+  // Render page
   for (int note = 0; note < size; note++) {
-    runningTime = millis();
+
+    if (countdown > 0 && millis() - timeLastNumberChanged > 1000) {
+      clearScreen();
+      tft.drawString(String(countdown), 120, 170);
+      timeLastNumberChanged = millis();
+      countdown--;
+    }
+
     //to calculate the note duration, take one second divided by the note type.
     //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
     int duration = 1000 / pirates_durations[note];
@@ -128,6 +136,9 @@ void startingGameCountdownScreen() {
     //stop the tone playing:
     noTone(SPEAKER_PIN);
   }
+
+  // Clean up
+  tft.unloadFont();
 }
 
 void gameRunningScreen() {
@@ -141,12 +152,92 @@ void gameRunningScreen() {
   tft.unloadFont();
   
   tft.loadFont(FONT_GILROY_HEAVY_96);
-  tft.drawString(String(currentLevel()), 120, 170);
+  tft.drawString(String(currentLevel()) + "/" + String(MAX_GAME_LENGTH), 120, 170);
   tft.unloadFont();
 
   createCreditsSprite().pushSprite(20, 270);
 }
 
+void sequenceCorrectScreen() {
+  tft.fillScreen(TFT_BLACK);
+
+  tft.setTextDatum(MC_DATUM); // Center text
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  
+  tft.loadFont(FONT_GILROY_HEAVY_64);
+  tft.drawString("WELL", 120, 130);
+  tft.drawString("DONE", 120, 190);
+  tft.unloadFont();
+}
+
+void sequenceWrongScreen() {
+  tft.fillScreen(TFT_BLACK);
+
+  tft.setTextDatum(MC_DATUM); // Center text
+  tft.setTextColor(TFT_RED, TFT_BLACK);
+  
+  tft.loadFont(FONT_GILROY_HEAVY_64);
+  tft.drawString("Oh no!", 120, 160);
+  tft.unloadFont();
+}
+
+void winnerScreen() {
+  
+  // Setup
+  tft.setTextDatum(MC_DATUM); // Center text
+  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+  tft.loadFont(FONT_GILROY_HEAVY_64);
+
+  int size = sizeof(pirates_durations) / sizeof(int);
+  unsigned long timeLastChanged = 0;
+  bool showText = true;
+
+  // Render page
+  for (int note = 0; note < size; note++) {
+
+    if (millis() - timeLastChanged > 200) {
+      clearScreen();
+      if (showText) {
+        tft.drawString("YOU", 120, 80);
+        tft.drawString("HAVE", 120, 150);
+        tft.drawString("WON!", 120, 220);
+        showText = false;
+      } else {
+        showText = true;
+      }
+      timeLastChanged = millis();
+    }
+
+    //to calculate the note duration, take one second divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int duration = 1000 / pirates_durations[note];
+    tone(SPEAKER_PIN, pirates_notes[note], duration);
+
+    //to distinguish the notes, set a minimum time between them.
+    //the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = duration * 1.30;
+    delay(pauseBetweenNotes);
+
+    //stop the tone playing:
+    noTone(SPEAKER_PIN);
+  }
+
+  // Clean up
+  tft.unloadFont();
+}
+
+void takeYourPrizeScreen() {
+  clearScreen();
+
+  tft.setTextDatum(MC_DATUM); // Center text
+  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+  
+  tft.loadFont(FONT_GILROY_HEAVY_64);
+  tft.drawString("TAKE", 120, 80);
+  tft.drawString("YOUR", 120, 150);
+  tft.drawString("PRIZE", 120, 220);
+  tft.unloadFont();
+}
 
 void updateScreen(String screen) {
   currentScreen = screen;
@@ -155,6 +246,10 @@ void updateScreen(String screen) {
   if (screen == "startGameScreen") startGameScreen();
   if (screen == "startingGameCountdownScreen") startingGameCountdownScreen();
   if (screen == "gameRunningScreen") gameRunningScreen();
+  if (screen == "sequenceCorrectScreen") sequenceCorrectScreen();
+  if (screen == "sequenceWrongScreen") sequenceWrongScreen();
+  if (screen == "winnerScreen") winnerScreen();
+  if (screen == "takeYourPrizeScreen") takeYourPrizeScreen();
 }
 
 void updateDisplay() {

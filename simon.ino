@@ -173,6 +173,7 @@ void extendColourSequence() {
 
 void gameOver() {
   Serial.printf("Game over! player completed %u level.\n", currentLevel() - 1);
+  updateScreen("sequenceWrongScreen");
   stopGame();
   delay(200);
 
@@ -190,7 +191,7 @@ void gameOver() {
     }
   }
   noTone(SPEAKER_PIN);
-  delay(500);
+  delay(2000);
 }
 
 /**
@@ -287,7 +288,12 @@ void unlockPrizeDoor() {
   resetAllInterruptFlags();
 }
 
+/**
+ * Handle any player inputs
+ */
 void handlePlayerInputs() {
+  
+  // Handle a coin being inserted
   if (CoinAcceptor.coin_inserted) {
     resetCoinAcceptor();
     addCredit(1);
@@ -295,10 +301,17 @@ void handlePlayerInputs() {
     Serial.printf("Coin has been inserted %u times\n", CoinAcceptor.inserted_coin_count);
   }
 
+  // Handle the start button being pressed
   if (StartButton.pressed) {
     resetStartButton();
     handleStartButtonPressed();
   }
+
+  // Handle any of the colour buttons being pressed
+  if (RedButton.pressed) { handleColourButtonPressed(RedButton); }
+  if (GreenButton.pressed) { handleColourButtonPressed(GreenButton); }
+  if (BlueButton.pressed) { handleColourButtonPressed(BlueButton); }
+  if (YellowButton.pressed) { handleColourButtonPressed(YellowButton); }
 }
 
 void updateGame() {
@@ -307,18 +320,16 @@ void updateGame() {
     if (currentLevelNotInitialised()) {
       resetPlayerResponseIndex();
       extendColourSequence();
-      delay(1000);
+      currentLevelHasBeenInitialised();
+      updateScreen("gameRunningScreen");
+      delay(800);
       playSequence();
       resetColourButtons();
-      currentLevelHasBeenInitialised();
     }
 
-    if (RedButton.pressed) { handleColourButtonPressed(RedButton); }
-    if (GreenButton.pressed) { handleColourButtonPressed(GreenButton); }
-    if (BlueButton.pressed) { handleColourButtonPressed(BlueButton); }
-    if (YellowButton.pressed) { handleColourButtonPressed(YellowButton); }
-
     if (levelCompleted()) {
+      updateScreen("sequenceCorrectScreen");
+      delay(1800);
       increaseCurrentLevel();
       resetLevelInitialised();
       refreshScreen();
@@ -327,8 +338,11 @@ void updateGame() {
     if (gameCompleted()) {
       stopGame();
       Serial.println("All levels completed, you have won a prize!");
-      delay(2000); // Show some winner text.
+      updateScreen("winnerScreen");
+      delay(5000); 
+      updateScreen("takeYourPrizeScreen");
       unlockPrizeDoor();
+      delay(10000); 
     }
   }
 }
