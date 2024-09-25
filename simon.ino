@@ -16,12 +16,13 @@
 #define LED_BLUE_PIN 16
 #define LED_YELLOW_PIN 15
 
+#include <led_strip.h>
 #include "buttons.h"
 #include "pitches.h"
 #include "sounds.h"
 #include "game.h"
 #include "game_credits.h"
-#include "lcd_display.h"
+#include <lcd_display.h>
 
 // Arrays
 const byte ledPins[] = { LED_RED_PIN, LED_GREEN_PIN, LED_BLUE_PIN, LED_YELLOW_PIN };
@@ -81,6 +82,7 @@ void setup() {
   enableAllInterrupts();
 
   initialiseDisplay();
+  initialiseLedStrip();
 
   delay(1000);
   Serial.printf("Setup completed.\n");
@@ -175,7 +177,7 @@ void gameOver() {
   Serial.printf("Game over! player completed %u level.\n", currentLevel() - 1);
   updateScreen("sequenceWrongScreen");
   stopGame();
-  delay(200);
+  delay(300);
 
   // Play a Wah-Wah-Wah-Wah sound
   tone(SPEAKER_PIN, NOTE_DS5);
@@ -191,7 +193,15 @@ void gameOver() {
     }
   }
   noTone(SPEAKER_PIN);
-  delay(2000);
+
+  for (int i = 0; i <= 10; i++) {
+    digitalWrite(ledPins[gameSequence[playerResponseSequenceIndex]], HIGH);
+    delay(200);
+    digitalWrite(ledPins[gameSequence[playerResponseSequenceIndex]], LOW);
+    delay(100);
+  }
+
+  delay(1000);
 }
 
 /**
@@ -318,6 +328,7 @@ void updateGame() {
   if (gameInProgress()) {
 
     if (currentLevelNotInitialised()) {
+      ledStripShowColour(CRGB::Black);
       resetPlayerResponseIndex();
       extendColourSequence();
       currentLevelHasBeenInitialised();
@@ -329,7 +340,7 @@ void updateGame() {
 
     if (levelCompleted()) {
       updateScreen("sequenceCorrectScreen");
-      delay(1800);
+      ledStripStrobeColour(CRGB::Green, 1800);
       increaseCurrentLevel();
       resetLevelInitialised();
       refreshScreen();
@@ -339,7 +350,7 @@ void updateGame() {
       stopGame();
       Serial.println("All levels completed, you have won a prize!");
       updateScreen("winnerScreen");
-      delay(5000); 
+      delay(2000); 
       updateScreen("takeYourPrizeScreen");
       unlockPrizeDoor();
       delay(10000); 
