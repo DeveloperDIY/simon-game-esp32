@@ -17,11 +17,11 @@
 #define LED_YELLOW_PIN 15
 
 #include <led_strip.h>
-#include "buttons.h"
-#include "pitches.h"
-#include "sounds.h"
-#include "game.h"
-#include "game_credits.h"
+#include <buttons.h>
+#include <pitches.h>
+#include <sounds.h>
+#include <game.h>
+#include <game_credits.h>
 #include <lcd_display.h>
 
 // Arrays
@@ -134,6 +134,7 @@ void startNewGame() {
 
 void resetGame() {
   Serial.printf("Resetting game state.\n");
+  clearLedStrip();
   resetLevelSequence();
   resetCurrentLevel();
   resetLevelInitialised();
@@ -176,6 +177,7 @@ void extendColourSequence() {
 void gameOver() {
   Serial.printf("Game over! player completed %u level.\n", currentLevel() - 1);
   updateScreen("sequenceWrongScreen");
+  ledStripShowColour(CRGB::Red);
   stopGame();
   delay(300);
 
@@ -201,6 +203,7 @@ void gameOver() {
     delay(100);
   }
 
+  clearLedStrip();
   delay(1000);
 }
 
@@ -252,6 +255,10 @@ bool currentLevelNotInitialised() {
   return (levelInitialised == false);
 }
 
+bool currentLevelIsInitialised() {
+  return (levelInitialised == true);
+}
+
 void currentLevelHasBeenInitialised() {
   levelInitialised = true;
 }
@@ -290,9 +297,9 @@ void unlockPrizeDoor() {
   disableAllInterrupts();
 
   openPrizeDoorLatch();  
-  delay(2000);
+  ledStripPartyDelay(2000);
   closePrizeDoorLatch();
-  delay(500);
+  ledStripPartyDelay(500);
 
   enableAllInterrupts();
   resetAllInterruptFlags();
@@ -318,17 +325,19 @@ void handlePlayerInputs() {
   }
 
   // Handle any of the colour buttons being pressed
-  if (RedButton.pressed) { handleColourButtonPressed(RedButton); }
-  if (GreenButton.pressed) { handleColourButtonPressed(GreenButton); }
-  if (BlueButton.pressed) { handleColourButtonPressed(BlueButton); }
-  if (YellowButton.pressed) { handleColourButtonPressed(YellowButton); }
+  if (gameInProgress() && currentLevelIsInitialised()) {
+    if (RedButton.pressed) { handleColourButtonPressed(RedButton); }
+    if (GreenButton.pressed) { handleColourButtonPressed(GreenButton); }
+    if (BlueButton.pressed) { handleColourButtonPressed(BlueButton); }
+    if (YellowButton.pressed) { handleColourButtonPressed(YellowButton); }
+  }
 }
 
 void updateGame() {
   if (gameInProgress()) {
 
     if (currentLevelNotInitialised()) {
-      ledStripShowColour(CRGB::Black);
+      clearLedStrip();
       resetPlayerResponseIndex();
       extendColourSequence();
       currentLevelHasBeenInitialised();
@@ -339,10 +348,11 @@ void updateGame() {
     }
 
     if (levelCompleted()) {
+      ledStripShowColour(CRGB::Green);
       updateScreen("sequenceCorrectScreen");
-      ledStripStrobeColour(CRGB::Green, 1800);
       increaseCurrentLevel();
       resetLevelInitialised();
+      delay(2000);
       refreshScreen();
     }
 
@@ -350,10 +360,11 @@ void updateGame() {
       stopGame();
       Serial.println("All levels completed, you have won a prize!");
       updateScreen("winnerScreen");
-      delay(2000); 
+      ledStripPartyDelay(2000);
       updateScreen("takeYourPrizeScreen");
       unlockPrizeDoor();
-      delay(10000); 
+      ledStripPartyDelay(10000);
+      clearLedStrip();
     }
   }
 }

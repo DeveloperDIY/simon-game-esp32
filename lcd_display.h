@@ -16,9 +16,11 @@
 #include <SPI.h>
 
 // Load fonts
-#include "GilroyMedium24.h"
-#include "GilroyHeavy64.h"
-#include "GilroyHeavy96.h"
+#include <GilroyBold18.h>
+#include <GilroyMedium24.h>
+#include <GilroyHeavy64.h>
+#include <GilroyHeavy96.h>
+#define FONT_GILROY_BOLD_18 GilroyBold18
 #define FONT_GILROY_MEDIUM_24 GilroyMedium24
 #define FONT_GILROY_HEAVY_64 GilroyHeavy64
 #define FONT_GILROY_HEAVY_96 GilroyHeavy96
@@ -148,11 +150,15 @@ void gameRunningScreen() {
   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
 
   tft.loadFont(FONT_GILROY_HEAVY_64);
-  tft.drawString("LEVEL", 120, 80);
+  tft.drawString("LEVEL", 120, 60);
   tft.unloadFont();
   
   tft.loadFont(FONT_GILROY_HEAVY_96);
-  tft.drawString(String(currentLevel()) + "/" + String(MAX_GAME_LENGTH), 120, 170);
+  tft.drawString(String(currentLevel()), 120, 150);
+  tft.unloadFont();
+
+  tft.loadFont(FONT_GILROY_BOLD_18);
+  tft.drawString(String(MAX_GAME_LENGTH) + " LEVELS TO WIN", 120, 240);
   tft.unloadFont();
 
   createCreditsSprite().pushSprite(20, 270);
@@ -194,6 +200,8 @@ void winnerScreen() {
 
   // Render page
   for (int note = 0; note < size; note++) {
+
+    ledStripParty();
 
     if (millis() - timeLastChanged > 200) {
       clearScreen();
@@ -257,10 +265,14 @@ void updateDisplay() {
 
   if (gameNotStarted() && playerHasNoCreditsLeft()) {
     screen = "insertCoinScreen";
+    ledStripSoftSparkle();
   }
+
   if (gameNotStarted() && playerHasCredits()) {
     screen = "startGameScreen";
+    ledStripSoftSparkle();
   }
+
   if (gameInProgress()) {
     screen = "gameRunningScreen";
   }
