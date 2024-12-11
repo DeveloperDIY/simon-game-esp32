@@ -1,20 +1,21 @@
-#define MAX_GAME_LENGTH 4
+#define MAX_GAME_LENGTH 15
 
 // GPIO Pins
-#define SPEAKER_PIN 47
-#define BUTTON_START_PIN 37
-#define COIN_ACCEPTOR_PIN 36
-#define DOOR_LATCH_PIN 35
+// ESP32-WROOM-32D pinouts = https://myhomethings.eu/en/esp32-pinout-which-pin-is-for-what/
+#define SPEAKER_PIN 5
+#define BUTTON_START_PIN 13
+#define COIN_ACCEPTOR_PIN 16
+#define DOOR_LATCH_PIN 17
 
-#define BUTTON_RED_PIN 7
-#define BUTTON_GREEN_PIN 6
-#define BUTTON_BLUE_PIN 5
-#define BUTTON_YELLOW_PIN 4
+#define BUTTON_RED_PIN 19
+#define BUTTON_GREEN_PIN 21
+#define BUTTON_BLUE_PIN 33
+#define BUTTON_YELLOW_PIN 22
 
-#define LED_RED_PIN 18
-#define LED_GREEN_PIN 17
-#define LED_BLUE_PIN 16
-#define LED_YELLOW_PIN 15
+#define LED_RED_PIN 14
+#define LED_GREEN_PIN 25
+#define LED_BLUE_PIN 27
+#define LED_YELLOW_PIN 26
 
 #include <led_strip.h>
 #include <buttons.h>
@@ -45,7 +46,7 @@ byte playerResponseSequenceIndex = 0;
 // Interrupts
 void IRAM_ATTR coinInserted() {
   CoinAcceptor.pulse_time = millis();
-  if (CoinAcceptor.pulse_time - CoinAcceptor.last_pulse_time > 1000) {
+  if (CoinAcceptor.pulse_time - CoinAcceptor.last_pulse_time > 600) {
     CoinAcceptor.inserted_coin_count++;
     CoinAcceptor.coin_inserted = true;
     CoinAcceptor.last_pulse_time = CoinAcceptor.pulse_time;
@@ -54,7 +55,7 @@ void IRAM_ATTR coinInserted() {
 
 void IRAM_ATTR buttonPressed(button &pressedButton) {
   pressedButton.pressed_time = millis();
-  if (pressedButton.pressed_time - pressedButton.last_pressed_time > 250) {
+  if (pressedButton.pressed_time - pressedButton.last_pressed_time > 100) {
     pressedButton.pressed = true;
     pressedButton.last_pressed_time = pressedButton.pressed_time;
   }
@@ -319,9 +320,9 @@ void handlePlayerInputs() {
   }
 
   // Handle the start button being pressed
-  if (StartButton.pressed) {
-    resetStartButton();
+  if (gameNotStarted() && StartButton.pressed) {
     handleStartButtonPressed();
+    resetStartButton();
   }
 
   // Handle any of the colour buttons being pressed
@@ -352,7 +353,7 @@ void updateGame() {
       updateScreen("sequenceCorrectScreen");
       increaseCurrentLevel();
       resetLevelInitialised();
-      delay(2000);
+      delay(1000);
       refreshScreen();
     }
 
@@ -365,6 +366,7 @@ void updateGame() {
       unlockPrizeDoor();
       ledStripPartyDelay(10000);
       clearLedStrip();
+      resetStartButton();
     }
   }
 }

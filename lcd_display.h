@@ -4,13 +4,12 @@
 // Configuration for tft_espi user_setup.h
 // #define ILI9341_DRIVER  
 // #define TFT_RGB_ORDER TFT_BGR
-// #define TFT_MOSI 11 // SDA
-// #define TFT_SCLK 12 // SCL
-// #define TFT_CS   10 // CS
-// #define TFT_DC    9 // DC
-// #define TFT_RST  -1 // REs
+// #define TFT_MOSI 23 // SDA
+// #define TFT_SCLK 18 // SCL
+// #define TFT_CS   15 // CS-
+// #define TFT_DC   2 // DC
+// #define TFT_RST  4 // RES
 // #define SPI_FREQUENCY  40000000
-// #define USE_HSPI_PORT
 
 #include <TFT_eSPI.h>
 #include <SPI.h>

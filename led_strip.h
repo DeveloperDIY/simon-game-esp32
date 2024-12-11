@@ -3,7 +3,7 @@
 #include "FastLED.h"
 
 #define LED_STRIP_NUM_LEDS 12
-#define LED_STRIP_DATA_PIN 38
+#define LED_STRIP_DATA_PIN 32
 
 uint8_t paletteIndex = 0;
 
